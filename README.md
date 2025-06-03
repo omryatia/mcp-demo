@@ -15,7 +15,7 @@ A complete **Model Context Protocol (MCP)** demonstration showing how to build M
 
 ✅ **Zero API Key Required** - Works completely offline with pattern matching  
 ✅ **Free Weather Data** - Uses wttr.in (no signup needed)  
-✅ **Multiple LLM Options** - Groq, OpenRouter, or pattern matching fallback  
+✅ **Multiple LLM Options** - Groq, or pattern matching fallback  
 ✅ **Modern MCP Transport** - StreamableHTTP (latest standard)  
 ✅ **FastMCP Integration** - Clean, Pythonic MCP development  
 ✅ **Workshop-Friendly** - Never fails due to API issues  
@@ -29,7 +29,6 @@ mcp-demo/
 ├── server.py                    # FastMCP server with weather tools
 ├── client.py                    # MCP client with multi-LLM support  
 ├── inspector_config.json        # MCP Inspector configuration
-├── start.py                     # Workshop launcher script
 ├── pyproject.toml              # Python dependencies
 ├── .env.example                # Environment variables template
 └── .gitignore                  # Git ignore patterns
@@ -218,8 +217,7 @@ async with Client("http://localhost:8000/mcp") as client:
 
 **Fallback Strategy:**
 1. **Groq API** - Fast, free Llama models (with signup)
-2. **OpenRouter** - Free tier with multiple models
-3. **Pattern Matching** - Regex-based parsing (no API needed)
+2. **Pattern Matching** - Regex-based parsing (no API needed)
 
 This ensures the demo **never fails** due to API issues!
 
