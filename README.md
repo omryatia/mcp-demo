@@ -29,6 +29,7 @@ mcp-demo/
 ├── server.py                    # FastMCP server with weather tools
 ├── client.py                    # MCP client with multi-LLM support  
 ├── inspector_config.json        # MCP Inspector configuration
+├── start.py                     # Workshop launcher script
 ├── pyproject.toml              # Python dependencies
 ├── .env.example                # Environment variables template
 └── .gitignore                  # Git ignore patterns
@@ -39,7 +40,6 @@ mcp-demo/
 ### Prerequisites
 - **Python 3.13+** ([Download](https://www.python.org/downloads/))
 - **uv** package manager ([Install](https://docs.astral.sh/uv/getting-started/installation/))
-- **Grok** Grok Api Key
 - **Node.js** (optional, for MCP Inspector)
 
 ### Step 1: Project Setup
@@ -49,6 +49,9 @@ mkdir mcp-demo && cd mcp-demo
 
 # Initialize Python project
 uv init --python 3.13
+
+# Copy files from this repository
+# (server.py, client.py, inspector_config.json, etc.)
 ```
 
 ### Step 2: Install Dependencies
@@ -59,18 +62,43 @@ uv add fastmcp requests python-dotenv
 # That's it! Only 3 dependencies needed.
 ```
 
-### Step 3: Environment Setup (Optional)
+### Step 3: Environment Setup (Optional but Recommended)
 ```bash
 # Copy environment template
 cp .env.example .env
 
-# Edit .env with your API keys (optional)
+# Edit .env with your API keys
 nano .env
 ```
 
-**Note**: The demo works without any API keys using pattern matching!
+### Step 4: Get Groq API Key (For Smart Responses)
 
-### Step 4: Run the Demo
+**Sign up for free Groq API:**
+
+1. **Visit Groq Console**: Go to [console.groq.com](https://console.groq.com)
+
+2. **Create Account**:
+   - Click "Sign Up"
+   - Use Google/GitHub or email signup
+   - **Completely free** - no credit card required
+
+3. **Get API Key**:
+   - After signup, go to "API Keys" section
+   - Click "Create API Key"
+   - Copy the key (starts with `gsk_...`)
+
+4. **Add to Environment**:
+   ```bash
+   # Edit .env file
+   nano .env
+   
+   # Add your key:
+   GROQ_API_KEY=gsk_your_actual_key_here
+   ```
+
+**Note**: Demo works without API key using pattern matching, but Groq gives much smarter responses!
+
+### Step 5: Run the Demo
 
 #### Option A: Server + Inspector (Visual Testing)
 ```bash
@@ -93,7 +121,7 @@ python client.py
 # ✅ Chat interface ready
 ```
 
-### Step 5: Test It!
+### Step 6: Test It!
 
 **In Inspector:**
 - Tool: `get_weather`
@@ -122,8 +150,7 @@ graph TB
     
     subgraph "External APIs"
         WEATHER[wttr.in<br/>Free Weather API]
-        LLM1[Groq API<br/>Free Llama Models]
-        LLM2[OpenRouter<br/>Free Tier]
+        GROQ[Groq API<br/>Free Llama Models]
         PATTERN[Pattern Matching<br/>No API Needed]
     end
     
@@ -131,9 +158,16 @@ graph TB
     UI2 -->|StreamableHTTP| MCP
     MCP --> TOOLS
     TOOLS --> WEATHER
-    UI2 --> LLM1
-    UI2 --> LLM2
+    UI2 --> GROQ
     UI2 --> PATTERN
+    
+    classDef external fill:#e1f5fe
+    classDef mcp fill:#f3e5f5
+    classDef ui fill:#e8f5e8
+    
+    class WEATHER,GROQ,PATTERN external
+    class MCP,TOOLS mcp
+    class UI1,UI2 ui
 ```
 
 ## 🛠️ Component Deep Dive
@@ -184,7 +218,8 @@ async with Client("http://localhost:8000/mcp") as client:
 
 **Fallback Strategy:**
 1. **Groq API** - Fast, free Llama models (with signup)
-2. **Pattern Matching** - Regex-based parsing (no API needed)
+2. **OpenRouter** - Free tier with multiple models
+3. **Pattern Matching** - Regex-based parsing (no API needed)
 
 This ensures the demo **never fails** due to API issues!
 
@@ -248,26 +283,32 @@ curl "https://wttr.in/Jerusalem?format=j1"
 
 ## 🤖 LLM Integration
 
-### Groq (Recommended)
+### Groq (Recommended for Smart Responses)
 
-**Setup:**
-1. Visit [console.groq.com](https://console.groq.com)
-2. Sign up (free)
-3. Get API key
-4. Add to `.env`: `GROQ_API_KEY=your_key_here`
+**Why Groq?**
+- ✅ **Completely free** with generous limits
+- ✅ **Fast inference** - Quick responses perfect for demos
+- ✅ **Reliable** - Best free LLM API for workshops
+- ✅ **Great tool calling** - Excellent MCP integration
+- ✅ **No credit card** required for signup
 
-**Benefits:**
-- ✅ Fast inference (very quick responses)
-- ✅ Free tier generous (lots of requests)
-- ✅ Reliable Llama-3 models
-- ✅ Good tool calling support
-- ✅ Works great with MCP
+**Setup Steps:**
 
-### Pattern Matching Fallback
+1. **Visit**: [console.groq.com](https://console.groq.com)
+2. **Sign Up**: Free account (Google/GitHub/Email)
+3. **Get API Key**: Create API Key → Copy key (starts with `gsk_`)
+4. **Add to `.env`**: `GROQ_API_KEY=gsk_your_key_here`
+
+**Models Available:**
+- `llama3-8b-8192` - Fast, good for most tasks
+- `llama3-70b-8192` - Slower but more capable
+- `mixtral-8x7b-32768` - Great for reasoning
+
+### Pattern Matching Fallback (No Setup Required)
 
 **How it works:**
 ```python
-# Extracts city from natural language
+# Extracts city from natural language using regex
 "What's the weather in London?" → calls get_weather("London")
 "How's Tokyo today?" → calls get_weather("Tokyo")
 "Weather in Beer Sheva?" → calls get_weather("Beer Sheva")
@@ -275,39 +316,289 @@ curl "https://wttr.in/Jerusalem?format=j1"
 
 **Benefits:**
 - ✅ **No API keys needed**
-- ✅ **Perfect for workshops**
-- ✅ **Always works**
-- ✅ **Still demonstrates MCP**
-- ✅ **Zero setup friction**
+- ✅ **Perfect for workshops** - Zero setup friction
+- ✅ **Always works** - Never fails due to API issues
+- ✅ **Still demonstrates MCP** - Shows tool calling concepts
+- ✅ **Educational** - Shows regex parsing vs LLM understanding
 
-## 💡 **Why Only Groq?**
+### Comparison: Groq vs Pattern Matching
 
-After testing, **Groq is the most reliable free option** for workshops:
+| Feature | Groq LLM | Pattern Matching |
+|---------|----------|------------------|
+| Setup | Free signup required | Zero setup |
+| Intelligence | Natural language understanding | Regex patterns only |
+| Flexibility | Handles variations, context, typos | Fixed patterns |
+| Responses | Natural, conversational | Template-based |
+| Workshop Use | Best experience | Fallback option |
 
-- **Other Free APIs**: Rate limits or signup friction
-- **Groq**: Consistent, fast, generous free tier
+**Recommendation**: Get Groq API key for best demo experience, but pattern matching ensures workshop never fails!
 
-**Two-tier approach is simpler:**
-1. **Groq** - For full LLM experience
-2. **Pattern Matching** - For zero-setup workshops
+## 🔧 MCP Decorators & Capabilities
 
-## 🎓 Workshop Usage
+FastMCP provides several decorators to expose different types of capabilities to LLMs and MCP clients:
 
-### For Instructors
+### **@mcp.tool() - Function Calling**
 
-This demo is designed for teaching MCP concepts with zero setup friction:
+The most common decorator - exposes functions as tools that LLMs can call:
 
-**Teaching Flow:**
-1. **Start with Inspector** - Visual tool testing
-2. **Show Server Code** - How tools are created  
-3. **Demo Client** - End-to-end integration
-4. **Explain Fallbacks** - Production considerations
+```python
+from fastmcp import FastMCP
 
-**Key Teaching Points:**
-- MCP protocol separates tools from LLMs
-- Tools are just decorated Python functions
-- Transport handles communication details
-- Fallbacks ensure reliability
+mcp = FastMCP("Demo Server")
+
+@mcp.tool()
+async def get_weather(city: str) -> dict:
+    """
+    Get current weather for a city
+    
+    Args:
+        city: Name of the city to get weather for
+    
+    Returns:
+        Weather information including temperature, description, etc.
+    """
+    # Tool implementation
+    return {"city": city, "temperature": "22°C"}
+
+@mcp.tool()
+async def calculate(expression: str) -> dict:
+    """Calculate mathematical expressions"""
+    try:
+        result = eval(expression)  # Don't do this in production!
+        return {"expression": expression, "result": result}
+    except Exception as e:
+        return {"error": str(e)}
+```
+
+### **@mcp.prompt() - Template Prompts**
+
+Provide reusable prompt templates that LLMs can use:
+
+```python
+@mcp.prompt()
+async def weather_report_prompt(city: str, style: str = "casual") -> str:
+    """
+    Generate a weather report prompt template
+    
+    Args:
+        city: City name for weather report
+        style: Report style (casual, formal, technical)
+    """
+    styles = {
+        "casual": f"Hey! What's the weather like in {city} today?",
+        "formal": f"Please provide a formal weather report for {city}.",
+        "technical": f"Generate detailed meteorological data for {city}."
+    }
+    return styles.get(style, styles["casual"])
+
+@mcp.prompt()
+async def code_review_prompt(language: str, code: str) -> str:
+    """Code review prompt template"""
+    return f"""
+    Please review this {language} code for:
+    - Best practices
+    - Potential bugs
+    - Performance improvements
+    - Security issues
+    
+    Code:
+    ```{language}
+    {code}
+    ```
+    """
+```
+
+### **@mcp.resource() - Data Resources**
+
+Expose data sources that LLMs can read from:
+
+```python
+@mcp.resource()
+async def weather_data(city: str) -> str:
+    """
+    Provide weather data as a resource
+    
+    Args:
+        city: City name
+    """
+    # Return structured data as string
+    return f"""
+    # Weather Data for {city}
+    
+    Current Conditions:
+    - Temperature: 22°C
+    - Humidity: 65%
+    - Wind: 15 km/h NW
+    
+    Last Updated: 2025-01-15 14:30 UTC
+    """
+
+@mcp.resource()
+async def api_documentation() -> str:
+    """API documentation resource"""
+    return """
+    # Weather API Documentation
+    
+    ## Endpoints
+    
+    ### GET /weather
+    Get current weather for a city
+    
+    Parameters:
+    - city (string): City name
+    - units (string): Temperature units (metric, imperial)
+    
+    Example Response:
+    {
+        "city": "London",
+        "temperature": 15,
+        "description": "Cloudy"
+    }
+    """
+
+@mcp.resource()
+async def system_logs() -> str:
+    """System logs resource"""
+    import datetime
+    return f"""
+    # System Logs - {datetime.datetime.now()}
+    
+    [INFO] Weather API requests: 1,245
+    [INFO] Cache hit rate: 87%
+    [WARN] Rate limit approaching for API key
+    [INFO] Server uptime: 2d 14h 32m
+    """
+```
+
+### **Complete MCP Server Example**
+
+Here's how to use all decorators together:
+
+```python
+from fastmcp import FastMCP
+import requests
+import json
+
+mcp = FastMCP("Comprehensive Weather Server")
+
+# TOOLS - Functions LLMs can call
+@mcp.tool()
+async def get_weather(city: str, units: str = "metric") -> dict:
+    """Get current weather for a city"""
+    # Implementation here
+    return {"city": city, "temperature": "22°C"}
+
+@mcp.tool()
+async def get_alerts(city: str) -> dict:
+    """Get weather alerts for a city"""
+    return {"city": city, "alerts": ["High wind warning"]}
+
+# PROMPTS - Template prompts LLMs can use
+@mcp.prompt()
+async def weather_summary_prompt(city: str, include_forecast: bool = False) -> str:
+    """Generate weather summary prompt"""
+    base = f"Summarize the current weather conditions in {city}"
+    if include_forecast:
+        base += " and include a brief forecast"
+    return base + ". Be concise and helpful."
+
+@mcp.prompt()
+async def travel_weather_prompt(cities: list, travel_date: str) -> str:
+    """Travel weather planning prompt"""
+    cities_str = ", ".join(cities)
+    return f"""
+    I'm planning to travel to {cities_str} on {travel_date}.
+    Please provide weather information for each city and travel recommendations.
+    Consider what to pack and best activities for the weather conditions.
+    """
+
+# RESOURCES - Data sources LLMs can read
+@mcp.resource()
+async def weather_history(city: str, days: int = 7) -> str:
+    """Historical weather data resource"""
+    return f"""
+    # Weather History for {city} (Last {days} days)
+    
+    Day 1: 20°C, Sunny
+    Day 2: 18°C, Cloudy  
+    Day 3: 22°C, Partly Cloudy
+    Day 4: 19°C, Rain
+    Day 5: 21°C, Sunny
+    Day 6: 23°C, Sunny
+    Day 7: 20°C, Overcast
+    
+    Average Temperature: 20.4°C
+    Rainy Days: 1
+    """
+
+@mcp.resource()
+async def api_status() -> str:
+    """API status and health information"""
+    return """
+    # Weather API Status
+    
+    ## Service Health
+    - API Status: ✅ Operational
+    - Response Time: 245ms avg
+    - Uptime: 99.9%
+    
+    ## Rate Limits
+    - Requests/minute: 60
+    - Requests/day: 1000
+    - Current usage: 45%
+    
+    ## Data Sources
+    - wttr.in: ✅ Available
+    - Backup APIs: ✅ Ready
+    """
+
+# Run the server
+if __name__ == "__main__":
+    mcp.run(transport="streamable-http", port=8000)
+```
+
+### **How Each Type Works with LLMs**
+
+#### **Tools (@mcp.tool)**
+```
+User: "What's the weather in Paris?"
+LLM: Calls get_weather(city="Paris")
+Result: {"city": "Paris", "temperature": "18°C", "description": "Rainy"}
+LLM: "The weather in Paris is currently 18°C and rainy."
+```
+
+#### **Prompts (@mcp.prompt)**
+```
+User: "Help me write a weather report"
+LLM: Uses weather_summary_prompt(city="London")
+Prompt: "Summarize the current weather conditions in London. Be concise and helpful."
+LLM: Uses this prompt to structure its response
+```
+
+#### **Resources (@mcp.resource)**
+```
+User: "What's the weather trend this week?"
+LLM: Reads weather_history(city="London", days=7)
+Data: Historical weather information
+LLM: Analyzes the data and provides trend analysis
+```
+
+### **When to Use Each Type**
+
+| Type | Use Case | Example |
+|------|----------|---------|
+| **Tools** | Actions, calculations, API calls | get_weather, send_email, query_database |
+| **Prompts** | Template generation, structured requests | code_review_prompt, essay_outline |
+| **Resources** | Data sources, documentation, logs | api_docs, user_manual, system_status |
+
+### **Benefits of Multiple Types**
+
+1. **Tools**: Execute actions and get real-time data
+2. **Prompts**: Provide structured templates for complex tasks  
+3. **Resources**: Give LLMs access to reference material
+4. **Combined**: Create comprehensive AI assistants with actions + knowledge
+
+This makes MCP servers incredibly powerful - they can provide **tools for actions**, **prompts for guidance**, and **resources for knowledge**! 🚀
 
 ## 📋 Troubleshooting
 
@@ -429,11 +720,11 @@ DEBUG=false
 Contributions welcome! Areas for improvement:
 
 - **New Tools** - Add more weather tools (alerts, historical data)
-- **LLM Integrations** - Support for more free LLM providers  
+- **LLM Integrations** - Support for other free LLM providers  
 - **UI Improvements** - Better chat interface
 - **Documentation** - More workshop materials
 - **Testing** - Automated test suite
-- **Examples** - More MCP use cases
+- **Examples** - More MCP use cases with different decorators
 
 ### Development Setup
 
