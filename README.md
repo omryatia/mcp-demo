@@ -43,14 +43,14 @@ mcp-demo/
 
 ### Step 1: Project Setup
 ```bash
+# Clone the Repo
+git clone https://github.com/omryatia/mcp-demo.git
+
 # Create project directory
 mkdir mcp-demo && cd mcp-demo
 
 # Initialize Python project
 uv init --python 3.13
-
-# Copy files from this repository
-# (server.py, client.py, inspector_config.json, etc.)
 ```
 
 ### Step 2: Install Dependencies
